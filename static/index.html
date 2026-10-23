@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CareLoop on Alexa+</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef4fb;--bg2:#d6e6fb;--surf:#fff;--surf2:#f2f6fc;--ink:#0b1b33;--mute:#56677f;--line:#d3dfee;--accent:#0089c7;--ubub:#0b1b33;--ubink:#fff;--ok:#0f8a47;--warn:#b86e00;--bad:#c92f2f;--badbg:#fdecec;--glow:rgba(0,150,214,.35);color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#050d1f;--bg2:#0c2149;--surf:#101f3b;--surf2:#17294d;--ink:#eaf2ff;--mute:#93a6c8;--line:#243b66;--accent:#00caff;--ubub:#00caff;--ubink:#04122a;--ok:#35e283;--warn:#ffb020;--bad:#ff6b6b;--badbg:#3a1a26;--glow:rgba(0,202,255,.5);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#050d1f;--bg2:#0c2149;--surf:#101f3b;--surf2:#17294d;--ink:#eaf2ff;--mute:#93a6c8;--line:#243b66;--accent:#00caff;--ubub:#00caff;--ubink:#04122a;--ok:#35e283;--warn:#ffb020;--bad:#ff6b6b;--badbg:#3a1a26;--glow:rgba(0,202,255,.5);color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:radial-gradient(120% 70% at 50% 0%,var(--bg2),var(--bg) 70%);color:var(--ink);font:16px/1.45 Figtree,system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:760px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:8px 10px;padding:12px 16px;flex-wrap:wrap}
+.ring{width:38px;height:38px;border-radius:50%;flex:none;border:4px solid var(--accent);box-shadow:0 0 14px var(--glow),inset 0 0 10px var(--glow);background:transparent}
+.ring.sm{width:30px;height:30px;border-width:3px}
+.ring.think{animation:spin 1.1s linear infinite;border-color:var(--accent) transparent var(--accent) var(--accent)}
+@keyframes spin{to{transform:rotate(360deg)}}
+header h1{font-size:18px;margin:0;font-weight:700;line-height:1.15}
+header small{color:var(--mute);font-size:12.5px}
+.sp{flex:1}
+.pill{border:1px solid var(--line);background:var(--surf);border-radius:999px;padding:7px 13px;font-size:13.5px;font-weight:500;display:flex;gap:6px;align-items:center}
+.pill.go{border-color:var(--accent);color:var(--accent);font-weight:700}
+.icon{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surf);display:grid;place-items:center;padding:0}
+#chat{flex:1;overflow-y:auto;padding:8px 16px 16px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.row{display:flex;gap:10px;align-items:flex-start;max-width:100%}
+.row.user{justify-content:flex-end}
+.bubble{padding:10px 14px;border-radius:20px;max-width:85%;overflow-wrap:anywhere}
+.bot .bubble{background:var(--surf);border:1px solid var(--line);border-top-left-radius:6px}
+.user .bubble{background:var(--ubub);color:var(--ubink);border-top-right-radius:6px;font-weight:500}
+.stack{display:flex;flex-direction:column;gap:10px;min-width:0;flex:1;align-items:flex-start}
+.card{width:100%;max-width:480px;background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.card h3{margin:0 0 2px;font-size:16px}
+.card .sub{color:var(--mute);font-size:13.5px;margin-bottom:10px}
+.bar{height:6px;border-radius:9px;background:var(--surf2);overflow:hidden;margin:6px 0 12px}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:9px;transition:width .5s}
+.med{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.med b{display:block;font-weight:700}
+.med span{color:var(--mute);font-size:13.5px}
+.med .info{flex:1}
+.tag{font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--surf2)}
+.tag.taken{color:var(--ok)}.tag.missed{color:var(--bad);background:var(--badbg)}.tag.due{color:var(--warn)}
+.btn{border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:99px;padding:6px 13px;font-weight:700;font-size:13.5px}
+.btn.fill{background:var(--accent);color:var(--ubink)}
+.btn:hover{filter:brightness(1.1)}
+.card.alert{border-color:var(--bad);background:linear-gradient(var(--badbg),var(--surf) 70%)}
+.card.alert h3{color:var(--bad)}
+.card.alert.resolved{border-color:var(--ok);background:var(--surf)}
+.card.alert.resolved h3{color:var(--ok)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.week{display:flex;align-items:flex-end;gap:8px;height:110px;margin:6px 0 4px}
+.week div{flex:1;text-align:center;font-size:12px;color:var(--mute);display:flex;flex-direction:column;justify-content:flex-end;gap:4px;height:100%}
+.week i{display:block;border-radius:8px 8px 4px 4px;background:var(--ok)}
+.week i.low{background:var(--warn)}
+.week div.today i{background:var(--accent)}
+.insight{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surf2);font-size:14px}
+.run .steps{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.run .steps li{font-size:14px;padding-left:24px;position:relative}
+.run .steps li:before{content:"\2713";position:absolute;left:0;color:var(--ok);font-weight:700}
+.run code{display:block;font-size:12px;color:var(--accent);font-family:ui-monospace,Menlo,monospace}
+.rem{display:flex;gap:12px;align-items:center}
+.rem .t{font-size:26px;font-weight:700;color:var(--accent);line-height:1}
+.dots{display:inline-flex;gap:4px;padding:6px 2px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{transform:translateY(-4px);opacity:.4}}
+footer{padding:8px 16px 14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--surf);border-radius:99px;padding:7px 14px;font-size:14px}
+.chips button:hover{border-color:var(--accent)}
+.bar2{display:flex;gap:10px;align-items:center}
+.bar2 input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:99px;padding:13px 18px;font:inherit}
+.mic{width:52px;height:52px;border-radius:50%;border:4px solid var(--accent);background:var(--surf);box-shadow:0 0 18px var(--glow);display:grid;place-items:center;flex:none;padding:0}
+.mic.on{animation:pulse 1.2s infinite;background:var(--accent);color:var(--ubink)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--glow)}100%{box-shadow:0 0 0 20px transparent}}
+.send{width:46px;height:46px;border-radius:50%;border:0;background:var(--accent);color:var(--ubink);font-weight:700;flex:none;padding:0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:520px){.hide-sm{display:none}header{padding:10px 12px}#chat,footer{padding-left:12px;padding-right:12px}}
+.mode{font-size:12px;color:var(--mute)}.mode.live{color:var(--ok);font-weight:700}.mode.off{color:var(--warn);font-weight:700}
+.feed{margin-top:10px;padding:8px 10px;border-radius:12px;background:var(--surf2);font-size:13px;display:flex;flex-direction:column;gap:4px}
+.feed b{font-weight:700}.feed .h{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.card.alert.claimed{border-color:var(--ok);background:var(--surf)}.card.alert.claimed h3{color:var(--ok)}
+.card.alert.esc{border-color:var(--bad)}
+.pbar{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:6px 0}.pbar span{width:84px;flex:none}.pbar .bar{flex:1;margin:0}.pbar em{font-style:normal;width:40px;text-align:right;color:var(--mute)}
+.err{margin:8px 16px;padding:10px 14px;border-radius:12px;background:var(--badbg);color:var(--bad);font-size:14px}
+.caution{font-size:12.5px;color:var(--warn);margin:8px 0 2px}
+.tl{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:14px;font-weight:600}.tin{border:1px solid var(--line);background:var(--surf2);color:var(--ink);border-radius:10px;padding:6px 8px;font:inherit}
+.card.propcard{border-color:var(--accent)}.card.propcard.approved{border-color:var(--ok)}.card.propcard.approved h3{color:var(--ok)}.card.propcard.rejected{opacity:.75}
+.dlv{color:var(--ok);font-size:11.5px;font-weight:700;margin-left:6px}.dlv.bad{color:var(--warn)}
+.prow{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin:6px 0}.prow b{font-weight:700}.prow span{color:var(--mute)}.prow.hit span{color:var(--warn);font-weight:700}
+.mback{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:var(--surf);color:var(--ink);border-radius:18px;padding:20px;max-width:360px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.modal h3{margin:0 0 8px;font-size:17px}.modal p{margin:0 0 6px;font-size:14.5px}.modal .acts{display:flex;gap:10px;margin-top:14px}.modal .acts .btn{flex:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="ring" id="logo"></div>
+    <div><h1>CareLoop</h1><small>Alexa+ caretaking, simulated · <span class="mode" id="mode">agent: checking…</span></small></div>
+    <div class="sp"></div>
+    <div class="pill" title="Simulated clock">&#128339; <span id="clock">07:30</span></div>
+    <button class="pill" id="viewer" title="Signed in as this family member. Tap to switch.">Sarah</button><button class="icon" id="reset" title="Reset demo day" aria-label="Reset demo day">&#8634;</button><button class="pill go" id="ff15" title="Jump ahead 15 minutes">+15m</button><button class="pill go" id="ff" title="Jump ahead two hours">+2h</button>
+    <button class="icon" id="voice" title="Spoken replies" aria-label="Toggle spoken replies">&#128266;</button>
+    <button class="icon" id="theme" title="Switch theme" aria-label="Switch theme">&#9680;</button>
+  </header>
+  <main id="chat" aria-live="polite"></main>
+  <footer>
+    <div class="chips" id="chips"></div>
+    <div class="bar2">
+      <button class="mic" id="mic" aria-label="Speak">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </button>
+      <input id="inp" placeholder="Ask Alexa about Grandma" autocomplete="off" aria-label="Message">
+      <button class="send" id="send" aria-label="Send">&#10148;</button>
+    </div>
+  </footer>
+</div>
+<script>
+// CareLoop UI. Every number on screen comes from the CareLoop MCP server (via /api/tool),
+// and chat + the autonomous follow-up run through the Bedrock agent (/api/chat, /api/tick).
+const P='Grandma',FAMILY=['Sarah','Dad','Raj'];
+const S={voice:true,viewer:'Sarah',st:null,al:[],fd:[]};
+const $=id=>document.getElementById(id),chat=$('chat');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hm=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const tmin=s=>+s.slice(0,2)*60+ +s.slice(3,5);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const scroll=()=>chat.scrollTo({top:chat.scrollHeight});
+
+async function http(path,body){const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+ const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){throw new Error(t.slice(0,160)||r.statusText)}
+ if(!r.ok)throw new Error(j.error||j.detail||r.statusText);return j}
+const tool=async(name,args={})=>(await http('/api/tool',{name,args})).result;
+
+async function load(){const [st,al,fd,pr]=await Promise.all([tool('get_daily_status',{person:P}),tool('get_open_alerts',{person:P}),tool('get_family_feed',{person:P,limit:20}),tool('list_proposals',{person:P,status:'all'})]);
+ S.st=st;S.al=al;S.fd=fd;S.pr=pr;$('clock').textContent=st.current_time}
+function setMode(m,note){const e=$('mode'),live=m==='bedrock'||(m||'').startsWith('llm:');e.className='mode '+(live?'live':'off');e.textContent=m==='bedrock'?'agent: Claude on Bedrock':live?'agent: '+m.slice(4)+' (live)':'agent: offline fallback';e.title=note||''}
+
+// ---- Cards (all built from server data) ----
+function medCard(){const ms=S.st.medications,n=ms.filter(m=>m.status==='taken').length;
+ return `<div class="card medcard"><h3>Grandma’s medications today</h3><div class="sub">${n} of ${ms.length} taken</div><div class="bar"><i style="width:${ms.length?n/ms.length*100:0}%"></i></div>`+
+ ms.map(m=>`<div class="med"><div class="info"><b>${esc(m.medication)}</b><span>${esc(m.dose)} at ${m.time}</span></div>${m.status==='taken'?'':`<button class="btn" data-act="take" data-med="${esc(m.medication)}">Mark taken</button>`}<span class="tag ${m.status}">${m.status}</span><button class="btn" data-act="remove" data-med="${esc(m.medication)}" title="Remove from schedule">Remove</button></div>`).join('')+`</div>`}
+function dlv(d){if(!d||d==='in-app')return'';return d==='sent'?'<span class="dlv">sent by SNS</span>':`<span class="dlv bad">not sent (${esc(d.replace(/^(skipped|failed):/,''))})</span>`}
+const POPUP=new Set(['remove_med','new_med','time_change']);
+function propCard(p){const kind={time_change:'Time change',reschedule:'Suggested schedule change',refill:'Suggested refill',new_med:'New medicine'}[p.kind]||'Suggestion';
+ if(p.status!=='pending')return `<div class="card propcard ${p.status}" data-id="${p.id}"><h3>${p.status==='approved'?'Approved':'Declined'}</h3><div class="sub">${esc(p.resolution||'')}</div></div>`;
+ const tin=p.kind==='new_med'?`<label class="tl">Time of day <input class="tin" type="time" value="${esc(p.payload.time_of_day||'08:00')}"></label>`:'';
+ return `<div class="card propcard" data-id="${p.id}"><h3>${kind}</h3><div class="sub">${esc(p.summary)}</div>${p.caution?`<div class="caution">${esc(p.caution)}</div>`:''}${tin}<div class="acts"><button class="btn fill" data-act="approve" data-id="${p.id}">Approve (${esc(S.viewer)})</button><button class="btn" data-act="reject" data-id="${p.id}">Not now</button></div></div>`}
+function patternCard(list){const rows=list.filter(a=>a.samples>0);
+ return `<div class="card"><h3>Her routine</h3><div class="sub">When she actually takes each dose, from the last 14 days</div>`+rows.map(a=>`<div class="prow ${a.suggestion?'hit':''}"><b>${esc(a.medication)}</b><span>scheduled ${a.scheduled} · usually ${a.typical_time||'n/a'} · ${a.samples} days</span></div>`).join('')+`</div>`}
+function refillCard(list){return `<div class="card"><h3>Medicine supply</h3><div class="sub">Days left, one dose a day</div>`+list.map(x=>x.days_left==null?'':`<div class="pbar"><span>${esc(x.medication)}</span><div class="bar"><i style="width:${Math.min(100,x.days_left/30*100)}%;background:${x.low?'var(--bad)':'var(--ok)'}"></i></div><em>${x.days_left}d</em></div>`).join('')+`</div>`}
+function feedHTML(name){const f=S.fd.filter(x=>x.message.includes(name)&&!x.message.startsWith('CareLoop suggestion')&&!/ approved: /.test(x.message)).slice(0,3);if(!f.length)return'';
+ return `<div class="feed"><div class="h">Family messages</div>`+f.map(x=>`<div><b>${esc(x.to)}:</b> ${esc(x.message)}${dlv(x.delivery)}</div>`).join('')+`</div>`}
+function alertCard(name){const a=S.al.find(x=>x.medication===name),med=S.st.medications.find(m=>m.medication===name)||{dose:'',time:''};
+ if(!a)return `<div class="card alert resolved alertcard" data-med="${esc(name)}"><h3>Resolved</h3><div class="sub">${esc(name)} was taken. No further action needed.</div>${feedHTML(name)}</div>`;
+ if(a.claimed_by)return `<div class="card alert claimed alertcard" data-med="${esc(name)}"><h3>${esc(a.claimed_by)} is handling this</h3><div class="sub">${esc(name)} ${esc(a.dose)} was due at ${med.time}. The rest of the family was told, so nobody else will call. Escalation stopped.</div>${feedHTML(name)}</div>`;
+ return `<div class="card alert ${a.escalated?'esc':''} alertcard" data-med="${esc(name)}"><h3>${a.escalated?'Escalated: missed dose':'Missed dose'}</h3><div class="sub">${esc(name)} ${esc(a.dose)} was due at ${med.time}. Open for ${a.minutes_open} min.${a.escalated?' Backup contact was alerted.':''}</div>
+ <div class="acts"><button class="btn fill" data-act="claim" data-med="${esc(name)}">I’ve got this (${esc(S.viewer)})</button><button class="btn" data-act="call">Call Grandma</button></div>${feedHTML(name)}</div>`}
+function weekCard(w){return `<div class="card"><h3>This week</h3><div class="sub">Doctor-ready summary · ${esc(w.period)}</div>`+
+ w.medications.map(m=>`<div class="pbar"><span>${esc(m.medication)}</span><div class="bar"><i style="width:${m.adherence_pct}%;background:${m.adherence_pct<80?'var(--warn)':'var(--ok)'}"></i></div><em>${m.adherence_pct}%</em></div>`).join('')+
+ `<div class="insight">Overall adherence <b>${w.overall_adherence_pct??'n/a'}%</b> · ${w.missed_dose_alerts} missed-dose alert${w.missed_dose_alerts===1?'':'s'}${w.wellbeing_notes.length?`<br>Notes: ${w.wellbeing_notes.slice(-2).map(n=>esc(n.note)).join('; ')}`:''}</div></div>`}
+function remCard(msg,t){return `<div class="card rem"><div class="t">${esc(t)}</div><div><h3>Reminder set</h3><div class="sub" style="margin:0">${esc(msg)}</div></div></div>`}
+function describe(s){const r=s.result,a=s.args;switch(s.tool){
+ case'get_daily_status':return `Checked status at ${r.current_time}: ${r.medications.filter(m=>m.status==='missed').length} missed, ${r.medications.filter(m=>m.status==='taken').length} taken`;
+ case'flag_missed_dose':return r.new_alerts&&r.new_alerts.length?`Alerted ${r.family_notified.join(', ')}: ${r.new_alerts.length} new missed dose`:'No new missed doses to report';
+ case'get_open_alerts':return `${r.length} open alert${r.length===1?'':'s'}`+(r.length?`: ${r.map(x=>x.medication+(x.claimed_by?' (claimed by '+x.claimed_by+')':'')).join(', ')}`:'');
+ case'escalate_alert':return r.escalated?`Escalated to ${r.notified.join(', ')}`:`Held back: ${r.reason}`;
+ case'analyze_patterns':{const hit=r.filter(x=>x.suggestion);return hit.length?hit.map(x=>`${x.medication}: she usually takes it around ${x.typical_time}, scheduled ${x.scheduled}`).join('; '):'Her routine matches the schedule'}
+ case'get_refill_status':{const low=r.filter(x=>x.low);return low.length?`Running low: ${low.map(x=>x.medication+' ('+x.days_left+' days)').join(', ')}`:'Supply is fine'}
+ case'propose_reschedule':case'propose_refill':case'propose_new_medication':return r.error?`Not proposed: ${r.error}`:(r.duplicate?'Already suggested to the family':`Suggested to the family: ${r.summary}`);
+ default:return typeof r==='string'?r:JSON.stringify(r).slice(0,140)}}
+
+// ---- Rendering ----
+function botRow(html,cards=[]){const r=document.createElement('div');r.className='row bot';
+ r.innerHTML=`<div class="ring sm"></div><div class="stack">${html?`<div class="bubble">${html}</div>`:''}${cards.join('')}</div>`;chat.appendChild(r);scroll();return r}
+function userRow(t){const r=document.createElement('div');r.className='row user';r.innerHTML=`<div class="bubble">${esc(t)}</div>`;chat.appendChild(r);scroll()}
+function thinking(){const r=document.createElement('div');r.className='row bot';
+ r.innerHTML='<div class="ring sm think"></div><div class="stack"><div class="bubble"><span class="dots"><i></i><i></i><i></i></span></div></div>';chat.appendChild(r);scroll();return r}
+function speak(t){if(!S.voice||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t))}catch(e){}}
+async function say(text,cards=[]){botRow(esc(text),cards);speak(text)}
+function fail(e){botRow(esc('I couldn’t reach CareLoop: '+e.message+'. Is the MCP server (python server.py) running?'))}
+async function refreshCards(){await load();
+ document.querySelectorAll('.medcard').forEach(c=>{c.outerHTML=medCard()});
+ document.querySelectorAll('.alertcard').forEach(c=>{c.outerHTML=alertCard(c.dataset.med)});
+ document.querySelectorAll('.propcard').forEach(c=>{const p=S.pr.find(x=>String(x.id)===c.dataset.id);if(p)c.outerHTML=propCard(p)});
+ for(const a of S.al)if(!document.querySelector(`.alertcard[data-med="${CSS.escape(a.medication)}"]`))botRow('',[alertCard(a.medication)]);
+ for(const p of S.pr)if(p.status==='pending'&&!POPUP.has(p.kind)&&!document.querySelector(`.propcard[data-id="${p.id}"]`))botRow('',[propCard(p)])}
+
+// ---- Confirmation popup for schedule changes (add / remove) ----
+function confirmModal(p){return new Promise(res=>{
+ const title=p.kind==='time_change'?'Are you sure about changing the time?':'You sure you want to '+(p.kind==='remove_med'?'remove it from the schedule':p.kind==='new_med'?'add it':'make this change')+'?';
+ const needTime=p.kind==='new_med'&&!(p.payload&&p.payload.time_of_day);
+ const w=document.createElement('div');w.className='mback';
+ w.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><p>${esc(p.summary)}</p>${p.caution?`<div class="caution">${esc(p.caution)}</div>`:''}${needTime?'<label class="tl">Time of day <input class="tin" type="time" value="08:00"></label>':''}<div class="acts"><button class="btn fill" data-y>Yes</button><button class="btn" data-n>No</button></div></div>`;
+ const done=v=>{w.remove();res(v)};
+ w.querySelector('[data-y]').onclick=()=>done({yes:true,time:needTime?w.querySelector('.tin').value:''});
+ w.querySelector('[data-n]').onclick=()=>done({yes:false});
+ document.body.appendChild(w);w.querySelector('[data-y]').focus()})}
+async function decide(pid){await load();const p=S.pr.find(x=>x.id===pid);if(!p||p.status!=='pending')return;
+ const a=await confirmModal(p);
+ const r=a.yes?await tool('approve_proposal',{proposal_id:pid,approved_by:S.viewer,time_of_day:a.time||''})
+              :await tool('reject_proposal',{proposal_id:pid,rejected_by:S.viewer});
+ await refreshCards();
+ if(a.yes&&r.ok)botRow('',[medCard()]);
+ await say(a.yes?r.message:'Okay, I left the schedule as it was.')}
+
+// ---- Agent calls ----
+async function showRun(d,title,sub){const r=document.createElement('div');r.className='row bot';
+ r.innerHTML=`<div class="ring sm think"></div><div class="stack"><div class="card run"><h3>${esc(title)}</h3><div class="sub">${esc(sub)}</div><ol class="steps"></ol></div></div>`;
+ chat.appendChild(r);const ol=r.querySelector('.steps');
+ for(const s of d.steps){const li=document.createElement('li');li.innerHTML=`<code>${esc(s.tool)}(${esc(Object.values(s.args).map(v=>typeof v==='string'?v:JSON.stringify(v)).join(', '))})</code>${esc(describe(s))}`;ol.appendChild(li);scroll();await sleep(350)}
+ r.querySelector('.ring').classList.remove('think')}
+const ACTIONS=new Set(['flag_missed_dose','schedule_reminder','escalate_alert','claim_alert','propose_refill','propose_reschedule']);
+async function runTick(){const w=thinking();
+ try{const d=await http('/api/tick',{});w.remove();setMode(d.mode,d.note);
+  if(d.steps.some(s=>ACTIONS.has(s.tool))){await showRun(d,'CareLoop agent is on it','Nobody asked. The clock moved, so it checked in and acted.');
+   if(d.text)await say(d.text)}
+  else await say(d.text||`It’s ${S.st.current_time}. Nothing needs attention.`);
+  await refreshCards();
+ }catch(e){w.remove();fail(e)}}
+async function ask(q){q=q.trim();if(!q)return;userRow(q);$('inp').value='';const w=thinking();
+ try{const d=await http('/api/chat',{message:q});w.remove();setMode(d.mode,d.note);await refreshCards();
+  const cards=[],used=new Set(d.steps.map(s=>s.tool));
+  if(used.has('get_weekly_summary'))cards.push(weekCard(d.steps.find(s=>s.tool==='get_weekly_summary').result));
+  if(used.has('analyze_patterns'))cards.push(patternCard(d.steps.find(s=>s.tool==='analyze_patterns').result));
+  if(used.has('get_refill_status'))cards.push(refillCard(d.steps.find(s=>s.tool==='get_refill_status').result));
+  const rem=d.steps.filter(s=>s.tool==='schedule_reminder').pop();if(rem)cards.push(remCard(rem.args.message,rem.args.remind_at.slice(-5)));
+  if(['log_check_in','add_medication_schedule','remove_medication','get_daily_status','list_medications'].some(t=>used.has(t))&&!cards.length)cards.push(medCard());
+  await say(d.text||'Done.',cards);
+  for(const a of S.al)if(['flag_missed_dose','get_open_alerts','claim_alert','escalate_alert'].some(t=>used.has(t))&&!document.querySelector(`.alertcard[data-med="${CSS.escape(a.medication)}"]`))botRow('',[alertCard(a.medication)]);
+  for(const s of d.steps)if(['propose_new_medication','propose_remove_medication','propose_time_change'].includes(s.tool)&&s.result&&s.result.id)await decide(s.result.id);
+ }catch(e){w.remove();fail(e)}}
+async function advance(mins){try{const t=Math.min(tmin(S.st.current_time)+mins,23*60+59);await tool('set_demo_time',{time_of_day:hm(t)});await load();await runTick()}catch(e){fail(e)}}
+
+// ---- Events ----
+chat.addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;
+ try{
+ if(a==='take'){await tool('log_check_in',{person:P,kind:'medication_taken',medication:b.dataset.med});await refreshCards();await say(`Logged ${b.dataset.med} as taken.`)}
+ if(a==='remove'){const r=await tool('propose_remove_medication',{person:P,medication:b.dataset.med});if(r.error)await say(r.error);else await decide(r.id)}
+ if(a==='claim'){const r=await tool('claim_alert',{person:P,medication:b.dataset.med,claimed_by:S.viewer});await refreshCards();await say(r)}
+ if(a==='approve'){const t=b.closest('.propcard').querySelector('.tin');const r=await tool('approve_proposal',{proposal_id:+b.dataset.id,approved_by:S.viewer,time_of_day:t?t.value:''});await refreshCards();await say(r.message)}
+ if(a==='reject'){const r=await tool('reject_proposal',{proposal_id:+b.dataset.id,rejected_by:S.viewer});await refreshCards();await say(r.message)}
+ if(a==='call')await say('Calling Grandma on her Echo Show. (Simulated call.)');
+ }catch(err){fail(err)}});
+$('send').onclick=()=>ask($('inp').value);
+$('inp').addEventListener('keydown',e=>{if(e.key==='Enter')ask($('inp').value)});
+$('ff').onclick=()=>advance(120);$('ff15').onclick=()=>advance(15);
+$('viewer').onclick=()=>{S.viewer=FAMILY[(FAMILY.indexOf(S.viewer)+1)%FAMILY.length];$('viewer').textContent=S.viewer;refreshCards().catch(()=>{})};
+$('reset').onclick=async()=>{try{await tool('reset_demo_day',{person:P});await tool('set_demo_time',{time_of_day:'07:30'});chat.innerHTML='';await start()}catch(e){fail(e)}};
+$('voice').onclick=()=>{S.voice=!S.voice;$('voice').innerHTML=S.voice?'&#128266;':'&#128263;';if(!S.voice)try{speechSynthesis.cancel()}catch(e){}};
+$('theme').onclick=()=>{const r=document.documentElement,d=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=d?'light':'dark'};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+$('mic').onclick=()=>{if(!SR){say('Voice input is not supported in this browser. Type your request instead.');return}
+ try{if(rec){rec.stop();return}rec=new SR();rec.lang='en-US';$('mic').classList.add('on');
+  rec.onresult=e=>ask(e.results[0][0].transcript);rec.onend=rec.onerror=()=>{$('mic').classList.remove('on');rec=null};rec.start()}catch(e){$('mic').classList.remove('on');rec=null}};
+['How is Grandma today?','She took her Metformin','Show the week','Remind her at 6 pm to drink water','What patterns do you see?','Is she running low on anything?','Add Aspirin at 9 am','Change Metformin to 9 am','Remove Vitamin D'].forEach(c=>{const b=document.createElement('button');b.textContent=c;b.onclick=()=>ask(c);$('chips').appendChild(b)});
+async function start(){try{await load();
+  botRow(esc('Hi, I’m Alexa+ with CareLoop. I’m keeping an eye on Grandma’s medications. Tap +2h to see what I do on my own when a dose is missed, then +15m to see the follow-up.'),[medCard()]);
+  http('/api/health').then(h=>{$('mode').textContent='agent: '+h.configured_mode;$('mode').className='mode'}).catch(()=>{})
+ }catch(e){fail(e)}}
+start();
+</script>
+</body>
+</html>
